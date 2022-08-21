@@ -5,7 +5,7 @@ import { UpdatePostDto } from '../dto/update-post.dto';
 import { PostEntity } from '../entities/post.entity';
 
 @Injectable()
-export class PostRepository {
+export class PostsRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createPostDto: CreatePostDto): Promise<PostEntity> {
