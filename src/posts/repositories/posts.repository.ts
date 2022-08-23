@@ -20,8 +20,6 @@ export class PostsRepository {
       }
     });
 
-    console.log(user);
-
     if (!user) {
       throw new NotFoundError('Autor não encontrado');
     }
@@ -41,23 +39,71 @@ export class PostsRepository {
   }
 
   async findAll(): Promise<PostEntity[]> {
-    return this.prisma.post.findMany();
+    return this.prisma.post.findMany({
+      include: {
+        author: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
   }
 
   async findOne(id: number): Promise<PostEntity> {
     return this.prisma.post.findUnique({
       where: {
         id
+      },
+      include: {
+        author: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
       }
     });
   }
 
   async update(id: number, updatePostDto: UpdatePostDto): Promise<PostEntity> {
+    const { authorEmail } = updatePostDto;
+    delete updatePostDto.authorEmail;
+
+    if (!authorEmail) {
+      return this.prisma.post.update({
+        where: {
+          id
+        },
+        data: updatePostDto
+      });
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email: authorEmail
+      }
+    });
+
+    if (!user) {
+      throw new NotFoundError('Autor não encontrado');
+    }
+
+    const data: Prisma.PostUpdateInput = {
+      ...updatePostDto,
+      author: {
+        connect: {
+          email: authorEmail
+        }
+      }
+    };
+
     return this.prisma.post.update({
       where: {
         id
       },
-      data: updatePostDto
+      data
     });
   }
 
